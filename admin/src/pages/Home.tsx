@@ -1,16 +1,21 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const email = location.state?.email ?? "User";
+  const email = localStorage.getItem("email") ?? "User";
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+    navigate("/");
+  };
 
   return (
     <div style={{ maxWidth: 400, margin: "100px auto", fontFamily: "sans-serif" }}>
       <h1>Hi, {email}!</h1>
-      <p>You have successfully registered.</p>
-      <button onClick={() => navigate("/")} style={{ padding: "8px 16px" }}>
-        Back to Register
+      <p>You are logged in.</p>
+      <button onClick={handleLogout} style={{ padding: "8px 16px" }}>
+        Logout
       </button>
     </div>
   );

@@ -1,5 +1,8 @@
-controllers:
+docker exec -it ea0649b0cf49 php bin/console cache:clearcontrollers:
     resource:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+api_login_check:
+    path: /auth
+    methods: [POST]

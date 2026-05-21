@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Register from "./pages/Login";
+import Register from "./pages/Authentication";
 import Home from "./pages/Home";
 
 export default function App() {
