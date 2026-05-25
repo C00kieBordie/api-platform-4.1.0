@@ -1,15 +1,7 @@
 #syntax=docker/dockerfile:1
 
-# Adapted from https://github.com/dunglas/symfony-docker
-
-
 # Versions
-FROM dunglas/frankenphp:1-php8.4 AS frankenphp_upstream
-
-
-# The different stages of this Dockerfile are meant to be built into separate images
-# https://docs.docker.com/develop/develop-images/multistage-build/#stop-at-a-specific-build-stage
-# https://docs.docker.com/compose/compose-file/#target
+FROM dunglas/frankenphp:latest AS frankenphp_upstream
 
 
 # Base FrankenPHP image
@@ -17,8 +9,6 @@ FROM frankenphp_upstream AS frankenphp_base
 
 WORKDIR /app
 
-# persistent / runtime deps
-# hadolint ignore=DL3008
 RUN apt-get update && apt-get install --no-install-recommends -y \
     acl \
     file \
@@ -26,7 +16,6 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 RUN set -eux; \
@@ -55,6 +44,7 @@ ENTRYPOINT ["docker-entrypoint"]
 HEALTHCHECK --start-period=60s CMD curl -f http://localhost:2019/metrics || exit 1
 CMD [ "frankenphp", "run", "--config", "/etc/caddy/Caddyfile" ]
 
+
 # Dev FrankenPHP image
 FROM frankenphp_base AS frankenphp_dev
 
@@ -72,6 +62,7 @@ COPY --link frankenphp/conf.d/app.dev.ini $PHP_INI_DIR/conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/caddy/Caddyfile", "--watch" ]
 
+
 # Prod FrankenPHP image
 FROM frankenphp_base AS frankenphp_prod
 
@@ -83,12 +74,10 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY --link frankenphp/conf.d/app.prod.ini $PHP_INI_DIR/conf.d/
 COPY --link frankenphp/worker.Caddyfile /etc/caddy/worker.Caddyfile
 
-# prevent the reinstallation of vendors at every changes in the source code
 COPY --link composer.* symfony.* ./
 RUN set -eux; \
     composer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress
 
-# copy sources
 COPY --link . ./
 RUN rm -Rf frankenphp/
 
